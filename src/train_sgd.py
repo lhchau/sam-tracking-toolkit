@@ -12,6 +12,7 @@ import wandb
 from src.models import *
 from src.utils.utils import progress_bar, count_range_weights
 from src.data.get_dataloader import get_dataloader
+from src.utils.loss_landscape import get_loss_landscape
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -23,6 +24,8 @@ args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
+EPOCHS = 200
 
 # Initialize Wandb
 name = "ex01_L2_bs-128_rho-0.05_momen-0.9_SGD_no-wd"
@@ -58,7 +61,7 @@ if device == 'cuda':
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
 
 
 # Training
@@ -167,18 +170,23 @@ def test():
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     data = [[key, value] for key, value in checkpoint.items() if key[-5:] == "count"]
     table = wandb.Table(data=data, columns = ["label", "value"])
-
+    train_fig = get_loss_landscape(net, train_dataloader)
+    test_fig = get_loss_landscape(net, test_dataloader)
+    
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
         'test/acc': 100.*correct/total,
-        "test/weight_bar_chart": wandb.plot.bar(table, "label", "value", title="Bar Chart of Weight Range")
+        "test/weight_bar_chart": wandb.plot.bar(table, "label", "value", title="Bar Chart of Weight Range"),
+        "test/loss_landscape": wandb.Image(test_fig),
+        "train/loss_landscape": wandb.Image(train_fig)
         })
 
 if __name__ == "__main__":
-    for epoch in range(start_epoch, start_epoch+1):
+    for epoch in range(start_epoch, start_epoch+EPOCHS):
         train(epoch)
         val(epoch)
         scheduler.step()
     test()
+    
         
 
