@@ -11,6 +11,15 @@ import math
 import torch.nn as nn
 import torch.nn.init as init
 
+def count_range_weights(model):  
+        ranges = [1e-12, 1e-8, 1e-4, 1e-2, 1]
+        counts = [0] * len(ranges)
+        for param in model.parameters():  
+            if param is not None:  
+                param_values = param.data.view(-1).abs()
+                for i in range(len(ranges)):
+                    counts[i] += (param_values < ranges[i]).sum().item()
+        return counts
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
