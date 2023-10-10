@@ -28,7 +28,7 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 EPOCHS = 200
 
 # Initialize Wandb
-name = "ex01_L2_bs-128_rho-0.05_momen-0.9_SGD_no-wd"
+name = "ex02_L2_bs-128_rho-0.05_momen-0.9_SGD_wd-5e-4"
 print('==> Initialize wandb..')
 wandb.init(project="Task 1 - Rerun", name=name)
 
@@ -60,7 +60,7 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
 
 
