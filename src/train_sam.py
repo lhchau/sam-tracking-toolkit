@@ -8,6 +8,7 @@ import torch.backends.cudnn as cudnn
 import os
 import argparse
 import wandb
+import yaml
 
 from src.models import *
 from src.utils.utils import progress_bar, count_range_weights
@@ -15,6 +16,7 @@ from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
+from utils.get_similarity_score import get_similarity_score
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -100,9 +102,19 @@ def train(epoch):
         first_loss.backward()
         optimizer.first_step(zero_grad=True)
         
+        # get first gradient
+        first_grad = optimizer._get_grad()
+        optimizer.zero_grad()
+        
         disable_running_stats(net)  # <- this is the important line
         criterion(net(inputs), targets).backward()
         optimizer.second_step(zero_grad=True)
+        
+        # get second gradient   
+        second_grad = optimizer._get_grad()
+        optimizer.zero_grad
+        
+        sim_score = get_similarity_score(first_grad, second_grad)
 
         train_loss += first_loss.item()
         _, predicted = outputs.max(1)
@@ -113,7 +125,8 @@ def train(epoch):
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
-        'train/acc': 100.*correct/total
+        'train/acc': 100.*correct/total,
+        'train/sim_score': sim_score
         })
 
 def val(epoch):

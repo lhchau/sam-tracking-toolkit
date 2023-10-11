@@ -1,0 +1,18 @@
+data:
+  batch_size: 128
+  num_workers: 4
+  split: [0.8, 0.2]
+
+trainer:
+  epochs: 200
+
+model:
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005
+  rho: 0.05
+  adaptive: True
+
+wandb:
+  name: "ex04_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4"
+  project: "Task 1 - Rerun"
