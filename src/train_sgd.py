@@ -8,6 +8,7 @@ import torch.backends.cudnn as cudnn
 import os
 import argparse
 import wandb
+import yaml
 
 from src.models import *
 from src.utils.utils import progress_bar, count_range_weights
@@ -16,24 +17,31 @@ from src.utils.loss_landscape import get_loss_landscape
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--resume', '-r', action='store_true',
-                    help='resume from checkpoint')
+parser.add_argument('--experiment', default='example', type=str, help='path to YAML config file')
 args = parser.parse_args()
+
+with open(f"./config/{args.experiment}.yaml", "r") as yamlfile:
+    cfg = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    print("==> Read YAML config file successfully ...")
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
-EPOCHS = 200
+EPOCHS = cfg['trainer']['epochs'] 
 
+name = cfg['wandb']['name']
 # Initialize Wandb
-name = "ex02_L2_bs-128_rho-0.05_momen-0.9_SGD_wd-5e-4"
 print('==> Initialize wandb..')
-wandb.init(project="Task 1 - Rerun", name=name)
+wandb.init(project=cfg['wandb']['project'], name=cfg['wandb']['name'])
 
 # Data
-data_dict = get_dataloader(batch_size=128, num_workers=4, split=(0.8, 0.2))
+data_dict = get_dataloader(
+    batch_size=cfg['data']['batch_size'], 
+    num_workers=cfg['data']['num_workers'], 
+    split=cfg['data']['split']
+    )
+
 train_dataloader, val_dataloader, test_dataloader, classes = data_dict['train_dataloader'], data_dict['val_dataloader'], \
     data_dict['test_dataloader'], data_dict['classes']
 
@@ -60,8 +68,16 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
+optimizer = optim.SGD(
+    net.parameters(), 
+    lr=cfg['model']['lr'], 
+    momentum=cfg['model']['momentum'], 
+    weight_decay=cfg['model']['weight_decay']
+    )
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    optimizer, 
+    T_max=cfg['trainer']['epochs']
+    )
 
 
 # Training
