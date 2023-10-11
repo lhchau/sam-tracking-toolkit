@@ -123,10 +123,14 @@ def train(epoch):
 
         progress_bar(batch_idx, len(train_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        
+        wandb.log({
+            'train/sim_score': sim_score
+        })
+        
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
-        'train/acc': 100.*correct/total,
-        'train/sim_score': sim_score
+        'train/acc': 100.*correct/total
         })
 
 def val(epoch):
@@ -208,15 +212,17 @@ def test():
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     data = [[key, value] for key, value in checkpoint.items() if key[-5:] == "count"]
     table = wandb.Table(data=data, columns = ["label", "value"])
-    train_fig = get_loss_landscape(net, train_dataloader)
-    test_fig = get_loss_landscape(net, test_dataloader)
+    train_landscape_fig, train_contour_fig = get_loss_landscape(net, train_dataloader)
+    test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader)
     
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
         'test/acc': 100.*correct/total,
         "test/weight_bar_chart": wandb.plot.bar(table, "label", "value", title="Bar Chart of Weight Range"),
-        "test/loss_landscape": wandb.Image(test_fig),
-        "train/loss_landscape": wandb.Image(train_fig)
+        "test/loss_landscape": wandb.Image(test_landscape_fig),
+        "test/loss_contour": wandb.Image(test_contour_fig),
+        "train/loss_landscape": wandb.Image(train_landscape_fig),
+        "train/loss_contour": wandb.Image(train_contour_fig)
         })
 
 if __name__ == "__main__":

@@ -19,12 +19,11 @@ def get_loss_contour(
     dataloader,
     save_fig=False,
     split="train",
-    name=""
+    name="",
+    distance=10,
+    step=40
 ):
     criterion = nn.CrossEntropyLoss()
-
-    DISTANCES = 20
-    STEPS = 10
 
     x, y = iter(dataloader).__next__()
     x, y = x.to(device), y.to(device)
@@ -32,17 +31,16 @@ def get_loss_contour(
 
     model_final = copy.deepcopy(net)
 
-    loss_data_fin = loss_landscapes.random_plane(model_final, metric, DISTANCES, STEPS, normalization='filter', deepcopy_model=True)
+    loss_data_fin = loss_landscapes.random_plane(model_final, metric, distance, step, normalization='filter', deepcopy_model=True)
 
     fig = plt.figure()
     plt.contour(loss_data_fin, levels=50)
     plt.title('Loss Contours around Trained Model')
-    plt.show()
 
     # Save the plot as an image (e.g., as a PNG file)
     if save_fig:
-        directory = f"./assets/ASAM_ResNet18_{DISTANCES}_{STEPS}_{split}"
+        directory = f"./assets/{name}/{split}"
         if not os.path.exists(directory):
             os.makedirs(directory)
-        plt.savefig(f'{directory}/{name}.png', dpi=300)  
+        plt.savefig(f'{directory}/{distance}_{step}.png', dpi=300)
     return fig
