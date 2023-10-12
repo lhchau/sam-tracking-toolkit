@@ -127,13 +127,9 @@ def train(epoch):
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         
         wandb.log({
-            'train/sim_score': sim_score
+            'train/sim_score': sim_score,
+            'layers': sim_scores
         })
-        
-        for name, val in sim_scores.items():
-            wandb.log({
-                f'layers/{name}': val
-            })
         
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
@@ -167,11 +163,11 @@ def val(epoch):
     
     r1_count, r2_count, r3_count, r4_count, r5_count = count_range_weights(net)
     wandb.log({
-        "1e-12_count": r1_count,
-        "1e-08_count": r2_count - r1_count,
-        "1e-04_count": r3_count - r2_count - r1_count,
-        "1e-02_count": r4_count - r3_count - r2_count - r1_count,
-        "1e-00_count": r5_count - r4_count - r3_count - r2_count - r1_count
+        "weight/1e-12_count": r1_count,
+        "weight/1e-08_count": r2_count - r1_count,
+        "weight/1e-04_count": r3_count - r2_count - r1_count,
+        "weight/1e-02_count": r4_count - r3_count - r2_count - r1_count,
+        "weight/1e-00_count": r5_count - r4_count - r3_count - r2_count - r1_count
         })
 
     # Save checkpoint.
@@ -219,8 +215,8 @@ def test():
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     data = [[key, value] for key, value in checkpoint.items() if key[-5:] == "count"]
     table = wandb.Table(data=data, columns = ["label", "value"])
-    train_landscape_fig, train_contour_fig = get_loss_landscape(net, train_dataloader)
-    test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader)
+    train_landscape_fig, train_contour_fig = get_loss_landscape(net, train_dataloader, save_fig=True, split='train', name=name)
+    test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader, save_fig=True, split='test', name=name)
     
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
