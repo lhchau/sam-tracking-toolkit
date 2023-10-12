@@ -16,7 +16,7 @@ from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
-from utils.get_similarity_score import get_similarity_score
+from utils.get_similarity_score import get_similarity_score, get_named_parameters
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -69,6 +69,8 @@ net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
+named_parameters = get_named_parameters(net)
+
 
 criterion = nn.CrossEntropyLoss()
 base_optimizer = optim.SGD
@@ -114,7 +116,7 @@ def train(epoch):
         second_grad = optimizer._get_grad()
         optimizer.zero_grad
         
-        sim_score = get_similarity_score(first_grad, second_grad)
+        sim_score, sim_scores = get_similarity_score(first_grad, second_grad, named_parameters)
 
         train_loss += first_loss.item()
         _, predicted = outputs.max(1)
@@ -127,6 +129,11 @@ def train(epoch):
         wandb.log({
             'train/sim_score': sim_score
         })
+        
+        for name, val in sim_scores.items():
+            wandb.log({
+                f'layers/{name}': val
+            })
         
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
