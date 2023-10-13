@@ -11,7 +11,7 @@ import wandb
 import yaml
 
 from src.models import *
-from src.utils.utils import progress_bar, count_range_weights
+from src.utils.utils import progress_bar, count_range_weights, get_mask_layers
 from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
@@ -71,6 +71,8 @@ if device == 'cuda':
     cudnn.benchmark = True
 named_parameters = get_named_parameters(net)
 
+perturbated_layers = cfg['model']['perturbated_layers']
+mask_layers = get_mask_layers(net, perturbated_layers)
 
 criterion = nn.CrossEntropyLoss()
 base_optimizer = optim.SGD
@@ -81,7 +83,8 @@ optimizer = SAM(
     momentum=cfg['model']['momentum'], 
     weight_decay=cfg['model']['weight_decay'],
     rho=cfg['model']['rho'], 
-    adaptive=cfg['model']['adaptive']
+    adaptive=cfg['model']['adaptive'],
+    mask_layers=mask_layers
     )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, 

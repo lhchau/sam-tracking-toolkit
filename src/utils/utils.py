@@ -11,6 +11,12 @@ import math
 import torch.nn as nn
 import torch.nn.init as init
 
+def get_mask_layers(net, perturbated_layers):
+    return [
+        any(layer_name in name for layer_name in perturbated_layers)
+        for name, _ in net.named_parameters()
+    ]
+
 def count_range_weights(model):  
         ranges = [1e-12, 1e-8, 1e-4, 1e-2, 1]
         counts = [0] * len(ranges)
