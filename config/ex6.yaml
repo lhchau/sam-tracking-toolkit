@@ -12,8 +12,8 @@ model:
   weight_decay: 0.0005
   rho: 0.05
   adaptive: True
-  perturbated_layers: ["conv", "bn", "shortcut", "linear"]
+  perturbated_layers: ['bn']
 
 wandb:
-  name: "ex04_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4"
+  name: "ex06_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4_OnlyBN"
   project: "Task 1 - Rerun"

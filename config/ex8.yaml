@@ -4,13 +4,16 @@ data:
   split: [0.8, 0.2]
 
 trainer:
-  epochs: 200
+  epochs: 1200
 
 model:
   lr: 0.1
   momentum: 0.9
   weight_decay: 0.0005
+  rho: 0.05
+  adaptive: True
+  perturbated_layers: ['linear']
 
 wandb:
-  name: "ex05_L2_bs-128_momen-0.9_SGD_wd-5e-4"
+  name: "ex08_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4_OnlyLinear"
   project: "Task 1 - Rerun"
