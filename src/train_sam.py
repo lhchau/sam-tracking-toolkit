@@ -11,7 +11,7 @@ import wandb
 import yaml
 
 from src.models import *
-from src.utils.utils import progress_bar, count_range_weights, get_mask_layers
+from src.utils.utils import progress_bar, count_range_weights, get_mask_layers, get_prop_of_neg
 from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
@@ -171,10 +171,12 @@ def val(epoch):
                          % (val_loss_mean, acc, correct, total))
             
     range_dic = count_range_weights(net)
+    prop_of_neg = get_prop_of_neg(net, named_parameters)
     wandb.log({
         'val/loss': val_loss_mean,
         'val/acc': acc,
-        'weight/': range_dic
+        'weight/': range_dic,
+        'weight_neg/': prop_of_neg
         })
     
     # Save checkpoint.

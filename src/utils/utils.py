@@ -17,6 +17,15 @@ def get_mask_layers(net, perturbated_layers):
         for name, _ in net.named_parameters()
     ]
 
+def get_prop_of_neg(model, named_parameters):
+    prop_of_neg = {
+        name: (param.data.view(-1) <= 0).sum().item() / len(param.data.view(-1))
+        for param, name in zip(model.parameters(), named_parameters)
+        if param is not None
+    }       
+            
+    return prop_of_neg
+
 def count_range_weights(model):  
         ranges = [1e-12, 1e-8, 1e-4, 1e-2, 1]
         counts = [0] * len(ranges)
@@ -29,11 +38,11 @@ def count_range_weights(model):
         for i in range(len(ranges) - 1, 0, -1):
             counts[i] -= counts[i-1]
         return {
-            "weight/1e-12_count": counts[0],
-            "weight/1e-08_count": counts[1],
-            "weight/1e-04_count": counts[2],
-            "weight/1e-02_count": counts[3],
-            "weight/1e-00_count": counts[4]
+            "1e-12_count": counts[0],
+            "1e-08_count": counts[1],
+            "1e-04_count": counts[2],
+            "1e-02_count": counts[3],
+            "1e-00_count": counts[4]
         }
 
 def get_mean_and_std(dataset):
