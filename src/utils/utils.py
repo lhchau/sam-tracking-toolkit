@@ -24,8 +24,17 @@ def count_range_weights(model):
             if param is not None:  
                 param_values = param.data.view(-1).abs()
                 for i in range(len(ranges)):
-                    counts[i] += (param_values < ranges[i]).sum().item()
-        return counts
+                    counts[i] += (param_values <= ranges[i]).sum().item()
+        
+        for i in range(len(ranges) - 1, 0, -1):
+            counts[i] -= counts[i-1]
+        return {
+            "weight/1e-12_count": counts[0],
+            "weight/1e-08_count": counts[1],
+            "weight/1e-04_count": counts[2],
+            "weight/1e-02_count": counts[3],
+            "weight/1e-00_count": counts[4]
+        }
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
