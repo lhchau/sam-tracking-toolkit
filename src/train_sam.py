@@ -37,6 +37,11 @@ name = cfg['wandb']['name']
 # Initialize Wandb
 print('==> Initialize wandb..')
 wandb.init(project=cfg['wandb']['project'], name=cfg['wandb']['name'])
+# define custom x axis metric
+wandb.define_metric("epoch")
+wandb.define_metric("train/*", step_metric="epoch")
+wandb.define_metric("val/*", step_metric="epoch")
+wandb.define_metric("weight/*", step_metric="epoch")
 
 # Data
 data_dict = get_dataloader(
@@ -129,15 +134,16 @@ def train(epoch):
         progress_bar(batch_idx, len(train_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         
-        if (batch_idx + 1) % 100:
+        if (batch_idx + 1) % 100 == 0:
             wandb.log({
-                'train/sim_score': sim_score,
-                'layers': sim_scores
-            })
+                'layers/sim_score': sim_score, 
+                'layers/': sim_scores,
+                })
         
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
-        'train/acc': 100.*correct/total
+        'train/acc': 100.*correct/total,
+        'epoch': epoch
         })
 
 def val(epoch):
@@ -162,14 +168,13 @@ def val(epoch):
             progress_bar(batch_idx, len(val_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (val_loss_mean, acc, correct, total))
             
+    range_dic = count_range_weights(net)
     wandb.log({
         'val/loss': val_loss_mean,
-        'val/acc': acc
+        'val/acc': acc,
+        'weight/': range_dic
         })
     
-    range_dic = count_range_weights(net)
-    wandb.log(range_dic)
-
     # Save checkpoint.
     if acc > best_acc:
         print('Saving..')
@@ -207,15 +212,12 @@ def test():
 
             progress_bar(batch_idx, len(test_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    data = [[key, value] for key, value in checkpoint.items() if key[-5:] == "count"]
-    table = wandb.Table(data=data, columns = ["label", "value"])
     train_landscape_fig, train_contour_fig = get_loss_landscape(net, train_dataloader, save_fig=True, split='train', name=name)
     test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader, save_fig=True, split='test', name=name)
     
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
         'test/acc': 100.*correct/total,
-        "test/weight_bar_chart": wandb.plot.bar(table, "label", "value", title="Bar Chart of Weight Range"),
         "test/loss_landscape": wandb.Image(test_landscape_fig),
         "test/loss_contour": wandb.Image(test_contour_fig),
         "train/loss_landscape": wandb.Image(train_landscape_fig),
