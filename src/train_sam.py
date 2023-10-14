@@ -131,8 +131,10 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
+        train_loss_mean = train_loss/(batch_idx+1)
+        acc = 100.*correct/total
         progress_bar(batch_idx, len(train_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                     % (train_loss_mean, acc, correct, total))
         
         if (batch_idx + 1) % 100 == 0:
             wandb.log({
@@ -141,8 +143,8 @@ def train(epoch):
                 })
         
     wandb.log({
-        'train/loss': train_loss/(len(train_dataloader)+1),
-        'train/acc': 100.*correct/total,
+        'train/loss': train_loss_mean,
+        'train/acc': acc,
         'epoch': epoch
         })
 
