@@ -129,10 +129,11 @@ def train(epoch):
         progress_bar(batch_idx, len(train_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         
-        wandb.log({
-            'train/sim_score': sim_score,
-            'layers': sim_scores
-        })
+        if (batch_idx + 1) % 100:
+            wandb.log({
+                'train/sim_score': sim_score,
+                'layers': sim_scores
+            })
         
     wandb.log({
         'train/loss': train_loss/(len(train_dataloader)+1),
@@ -156,37 +157,27 @@ def val(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
+            val_loss_mean = val_loss/(batch_idx+1)
+            acc = 100.*correct/total
             progress_bar(batch_idx, len(val_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                         % (val_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                         % (val_loss_mean, acc, correct, total))
             
     wandb.log({
-        'val/loss': val_loss/(len(val_dataloader)+1),
-        'val/acc': 100.*correct/total
+        'val/loss': val_loss_mean,
+        'val/acc': acc
         })
     
-    r1_count, r2_count, r3_count, r4_count, r5_count = count_range_weights(net)
-    wandb.log({
-        "weight/1e-12_count": r1_count,
-        "weight/1e-08_count": r2_count - r1_count,
-        "weight/1e-04_count": r3_count - r2_count - r1_count,
-        "weight/1e-02_count": r4_count - r3_count - r2_count - r1_count,
-        "weight/1e-00_count": r5_count - r4_count - r3_count - r2_count - r1_count
-        })
+    range_dic = count_range_weights(net)
+    wandb.log(range_dic)
 
     # Save checkpoint.
-    acc = 100.*correct/total
     if acc > best_acc:
         print('Saving..')
         state = {
             'net': net.state_dict(),
             'acc': acc,
             'loss': val_loss,
-            'epoch': epoch,
-            "1e-12_count": r1_count,
-            "1e-08_count": r2_count - r1_count,
-            "1e-04_count": r3_count - r2_count - r1_count,
-            "1e-02_count": r4_count - r3_count - r2_count - r1_count,
-            "1e-00_count": r5_count - r4_count - r3_count - r2_count - r1_count
+            'epoch': epoch
         }
         if not os.path.isdir(f'checkpoint/{name}'):
             os.mkdir(f'checkpoint/{name}')
