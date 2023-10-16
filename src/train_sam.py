@@ -16,8 +16,8 @@ from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
-from utils.get_similarity_score import get_similarity_score, get_named_parameters
-
+from src.utils.get_similarity_score import get_similarity_score, get_named_parameters
+from src.utils.get_sharpness import get_avg_sharpness
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--experiment', default='example', type=str, help='path to YAML config file')
@@ -75,6 +75,7 @@ if device == 'cuda':
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 named_parameters = get_named_parameters(net)
+scaler = torch.cuda.amp.GradScaler()
 
 perturbated_layers = cfg['model']['perturbated_layers']
 mask_layers = get_mask_layers(net, perturbated_layers)
@@ -141,10 +142,12 @@ def train(epoch):
                 'layers/sim_score': sim_score, 
                 'layers/': sim_scores,
                 })
-        
+    sharpness = get_avg_sharpness(net, scaler, train_dataloader, noisy_examples='default', sigma=0.1)
+
     wandb.log({
         'train/loss': train_loss_mean,
         'train/acc': acc,
+        'train/sharpness': sharpness,
         'epoch': epoch
         })
 
@@ -172,9 +175,12 @@ def val(epoch):
             
     range_dic = count_range_weights(net)
     prop_of_neg = get_prop_of_neg(net, named_parameters)
+    sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1)
+
     wandb.log({
         'val/loss': val_loss_mean,
         'val/acc': acc,
+        'val/sharpness': sharpness,
         'weight/': range_dic,
         'weight_neg/': prop_of_neg
         })
@@ -218,10 +224,13 @@ def test():
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     train_landscape_fig, train_contour_fig = get_loss_landscape(net, train_dataloader, save_fig=True, split='train', name=name)
     test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader, save_fig=True, split='test', name=name)
+    sharpness = get_avg_sharpness(net, scaler, test_dataloader, noisy_examples='default', sigma=0.1)
+
     
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
         'test/acc': 100.*correct/total,
+        'test/sharpness': sharpness,
         "test/loss_landscape": wandb.Image(test_landscape_fig),
         "test/loss_contour": wandb.Image(test_contour_fig),
         "train/loss_landscape": wandb.Image(train_landscape_fig),
