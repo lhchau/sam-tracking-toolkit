@@ -1,6 +1,6 @@
 checkpoint
 assets
-data
+data/cifar-10*
 __pycache__
 sam_loss_landscape.egg-info
 wandb
