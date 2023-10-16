@@ -12,7 +12,7 @@ model:
   weight_decay: 0.0005
   rho: 0.05
   adaptive: True
-  perturbated_layers: ['conv']
+  perturbated_layers: ["conv", "bn", "shortcut", "linear"]
 
 wandb:
   name: "ex05_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4"

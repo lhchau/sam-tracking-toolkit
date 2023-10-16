@@ -12,8 +12,8 @@ model:
   weight_decay: 0.0005
   rho: 0.05
   adaptive: True
-  perturbated_layers: ['shortcut']
+  perturbated_layers: ['conv']
 
 wandb:
-  name: "ex07_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4_OnlyShortcut"
-  project: "Task 1 - Rerun"
+  name: "ex02_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4_OnlyConv"
+  project: "Confirm phenomenon"

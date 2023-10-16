@@ -10,10 +10,10 @@ model:
   lr: 0.1
   momentum: 0.9
   weight_decay: 0.0005
-  rho: 0.05
+  rho: 2
   adaptive: True
-  perturbated_layers: ['bn']
+  perturbated_layers: ["conv", "bn", "shortcut", "linear"]
 
 wandb:
-  name: "ex06_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4_OnlyBN"
-  project: "Task 1 - Rerun"
+  name: "ex01_L2_bs-128_rho-0.05_momen-0.9_ASAM_wd-5e-4"
+  project: "Confirm phenomenon"
