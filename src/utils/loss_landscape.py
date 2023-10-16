@@ -22,8 +22,8 @@ def get_loss_landscape(
 ):
     criterion = nn.CrossEntropyLoss()
 
-    DISTANCES = 200
-    STEPS = 600
+    DISTANCES = 500
+    STEPS = 1000
 
     x, y = iter(dataloader).__next__()
     x, y = x.to(device), y.to(device)
