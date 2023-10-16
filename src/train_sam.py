@@ -18,6 +18,7 @@ from src.optimizer.sam import SAM
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
 from src.utils.get_similarity_score import get_similarity_score, get_named_parameters
 from src.utils.get_sharpness import get_avg_sharpness
+from src.utils.step_lr import StepLR
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--experiment', default='example', type=str, help='path to YAML config file')
@@ -92,9 +93,10 @@ optimizer = SAM(
     adaptive=cfg['model']['adaptive'],
     mask_layers=mask_layers
     )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+scheduler = StepLR(
     optimizer, 
-    T_max=cfg['trainer']['epochs']
+    learning_rate=cfg['model']['lr'],
+    total_epochs=200
     )
 
 # Training
@@ -241,7 +243,7 @@ if __name__ == "__main__":
     for epoch in range(start_epoch, start_epoch+EPOCHS):
         train(epoch)
         val(epoch)
-        scheduler.step()
+        scheduler(epoch)
     test()
     
         
