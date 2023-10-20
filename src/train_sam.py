@@ -11,7 +11,7 @@ import wandb
 import yaml
 
 from src.models import *
-from src.utils.utils import progress_bar, count_range_weights, get_mask_layers, get_prop_of_neg
+from src.utils.utils import progress_bar, get_mask_layers, get_prop_of_neg
 from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
 from src.optimizer.sam import SAM 
@@ -143,7 +143,7 @@ def train(epoch):
         if (batch_idx + 1) % 100 == 0:
             wandb.log({
                 'sim_score': sim_score, 
-                'sim_scores/': sim_scores,
+                'similarity/': sim_scores,
                 })
     sharpness = get_avg_sharpness(net, scaler, train_dataloader, noisy_examples='default', sigma=0.1)
     sparsity = {
@@ -181,9 +181,8 @@ def val(epoch):
             progress_bar(batch_idx, len(val_dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (val_loss_mean, acc, correct, total))
             
-    range_dic = count_range_weights(net)
     prop_of_neg = get_prop_of_neg(net, named_parameters)
-    sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1)
+    sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1, test='val')
 
     sparsity = {
         f"val_block{i}": get_feature_sparsity(train_dataloader, net, i)
@@ -194,7 +193,6 @@ def val(epoch):
         'val/loss': val_loss_mean,
         'val/acc': acc,
         'val/sharpness': sharpness,
-        'weight/': range_dic,
         'sparsity/': sparsity,
         'neg_weight/': prop_of_neg
         })
