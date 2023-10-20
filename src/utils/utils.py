@@ -18,14 +18,32 @@ def get_mask_layers(net, perturbated_layers):
     ]
 
 def get_prop_of_neg(model, named_parameters):
-    prop_of_neg = {
-        name: (param.data.view(-1) <= 0).sum().item() / len(param.data.view(-1))
-        for param, name in zip(model.parameters(), named_parameters)
-        if param is not None
-    }       
+    dic = {
+        "conv": (0, 0, 0, 0), "bn": (0, 0, 0, 0), "shortcut": (0, 0, 0, 0), "linear": (0, 0, 0, 0)
+    }
+    
+    for param, name in zip(model.parameters(), named_parameters):
+        for named_layer in dic.keys():
+            if named_layer in name and 'weight' in name:
+                dic[named_layer][0] += (param.data.view(-1) <= 0).sum().item() / len(param.data.view(-1))
+                dic[named_layer][1] += 1
+                break
+            if named_layer in name and 'bias' in name:
+                dic[named_layer][2] += (param.data.view(-1) <= 0).sum().item() / len(param.data.view(-1))
+                dic[named_layer][3] += 1
+                break
             
-    return prop_of_neg
-
+    return {
+        "conv_weight": dic['conv'][0] / dic['conv'][1],
+        "conv_bias": dic['conv'][2] / dic['conv'][3],
+        "bn_weight": dic['bn'][0] / dic['bn'][1],
+        "bn_bias": dic['bn'][2] / dic['bn'][3],
+        "shortcut_weight": dic['shortcut'][0] / dic['shortcut'][1],
+        "shortcut_bias": dic['shortcut'][2] / dic['shortcut'][3],
+        "linear_weight": dic['linear'][0] / dic['linear'][1],
+        "linear_bias": dic['linear'][2] / dic['linear'][3]
+    }
+            
 def count_range_weights(model):  
         ranges = [1e-12, 1e-8, 1e-4, 1e-2, 1]
         counts = [0] * len(ranges)
