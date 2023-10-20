@@ -18,6 +18,7 @@ from src.optimizer.sam import SAM
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
 from src.utils.get_similarity_score import get_similarity_score, get_named_parameters
 from src.utils.get_sharpness import get_avg_sharpness
+from src.utils.get_rank_matrix import *
 from src.utils.step_lr import StepLR
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -141,15 +142,20 @@ def train(epoch):
         
         if (batch_idx + 1) % 100 == 0:
             wandb.log({
-                'layers/sim_score': sim_score, 
-                'layers/': sim_scores,
+                'sim_score': sim_score, 
+                'sim_scores/': sim_scores,
                 })
     sharpness = get_avg_sharpness(net, scaler, train_dataloader, noisy_examples='default', sigma=0.1)
+    sparsity = {
+        f"train_block{i}": get_feature_sparsity(train_dataloader, net, i)
+        for i in [1, 2, 3, 4, 5]
+    }
 
     wandb.log({
         'train/loss': train_loss_mean,
         'train/acc': acc,
         'train/sharpness': sharpness,
+        'sparsity/': sparsity,
         'epoch': epoch
         })
 
@@ -179,12 +185,18 @@ def val(epoch):
     prop_of_neg = get_prop_of_neg(net, named_parameters)
     sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1)
 
+    sparsity = {
+        f"val_block{i}": get_feature_sparsity(train_dataloader, net, i)
+        for i in [1, 2, 3, 4, 5]
+    }
+
     wandb.log({
         'val/loss': val_loss_mean,
         'val/acc': acc,
         'val/sharpness': sharpness,
         'weight/': range_dic,
-        'weight_neg/': prop_of_neg
+        'sparsity/': sparsity,
+        'neg_weight/': prop_of_neg
         })
     
     # Save checkpoint.
@@ -228,11 +240,16 @@ def test():
     test_landscape_fig, test_contour_fig = get_loss_landscape(net, test_dataloader, save_fig=True, split='test', name=name)
     sharpness = get_avg_sharpness(net, scaler, test_dataloader, noisy_examples='default', sigma=0.1)
 
+    sparsity = {
+        f"test_block{i}": get_feature_sparsity(train_dataloader, net, i)
+        for i in [1, 2, 3, 4, 5]
+    }
     
     wandb.log({
         'test/loss': test_loss/(len(test_dataloader)+1),
         'test/acc': 100.*correct/total,
         'test/sharpness': sharpness,
+        'sparsity/': sparsity,
         "test/loss_landscape": wandb.Image(test_landscape_fig),
         "test/loss_contour": wandb.Image(test_contour_fig),
         "train/loss_landscape": wandb.Image(train_landscape_fig),

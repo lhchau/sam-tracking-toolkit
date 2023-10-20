@@ -118,13 +118,12 @@ def rob_err(batches, model, eps, pgd_alpha, scaler, attack_iters, n_restarts, rs
             n_batches=-1):
     n_corr_classified, train_loss_sum, n_ex = 0, 0.0, 0
     pgd_delta_list, pgd_delta_proj_list = [], []
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     for i, (X, y) in enumerate(batches):
         if n_batches != -1 and i > n_batches:  # limit to only n_batches
             break
         if cuda:
-            X, y = X.to(device), y.to(device)
+            X, y = X.cuda(), y.cuda()
         
         # if noisy_examples == 'none':
         #     X, y = X[~ln], y[~ln]

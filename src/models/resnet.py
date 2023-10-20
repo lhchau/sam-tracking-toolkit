@@ -92,14 +92,24 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x, return_features=False, return_block=5):
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)
+        if return_features and return_block == 1:
+            return out
         out = self.layer2(out)
+        if return_features and return_block == 2:
+            return out
         out = self.layer3(out)
+        if return_features and return_block == 3:
+            return out
         out = self.layer4(out)
+        if return_features and return_block == 4:
+            return out
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
+        if return_features and return_block == 5:
+            return out
         out = self.linear(out)
         return out
 
