@@ -4,13 +4,14 @@ import copy
 import torch.nn.functional as F
 
 
-def get_avg_sharpness(model, scaler, batches, noisy_examples, sigma, n_repeat=5):
+def get_avg_sharpness(model, scaler, batches, noisy_examples, sigma, n_repeat=5, test='train'):
     # TODO: implement "filter normalization" inside the perturb_weights() function
     loss_diff = 0
     for i in range(n_repeat):
         # rob_err: get loss of current weights
         _, loss_before, _ = rob_err(batches, model, 0, 0, scaler, 0, 1, noisy_examples=noisy_examples, n_batches=1)
-        
+        if test == 'val':
+            breakpoint()
         # perturb_weights: add random weight into current weights. Gaussian
         weights_delta_dict = perturb_weights(model, add_weight_perturb_scale=sigma, mul_weight_perturb_scale=0, weight_perturb_distr='gauss')
         
@@ -31,7 +32,7 @@ def eval_sharpness(model, batches, loss_f, rho, step_size, n_iters, n_restarts, 
     orig_model_state_dict = copy.deepcopy(model.state_dict())
 
     n_batches, best_obj_sum, final_err_sum, final_grad_norm_sum = 0, 0, 0, 0
-    for i_batch, (x, _, y, _, _) in enumerate(batches):
+    for _, (x, y) in enumerate(batches):
         x, y = x.cuda(), y.cuda()
 
         # TODO: for SGD, make f accept a loader (i.e., `batches`) and sample (x, y) from it if sgd=True, thus overriding the usage of the closure's (x, y). then make sure we do it on one "batch" (x, y) from above only; also: do eval of the CE/01 loss on a sufficient n batches
