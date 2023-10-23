@@ -6,7 +6,6 @@
 import os
 import sys
 import time
-import math
 
 import torch.nn as nn
 import torch.nn.init as init
@@ -19,7 +18,7 @@ def get_mask_layers(net, perturbated_layers):
 
 def get_prop_of_neg(model, named_parameters):
     dic = {
-        "conv": (0, 0, 0, 0), "bn": (0, 0, 0, 0), "shortcut": (0, 0, 0, 0), "linear": (0, 0, 0, 0)
+        "conv": [0, 0], "bn": [0, 0, 0, 0], "shortcut": [0, 0, 0, 0], "linear": [0, 0, 0, 0]
     }
     
     for param, name in zip(model.parameters(), named_parameters):
@@ -35,7 +34,6 @@ def get_prop_of_neg(model, named_parameters):
             
     return {
         "conv_weight": dic['conv'][0] / dic['conv'][1],
-        "conv_bias": dic['conv'][2] / dic['conv'][3],
         "bn_weight": dic['bn'][0] / dic['bn'][1],
         "bn_bias": dic['bn'][2] / dic['bn'][3],
         "shortcut_weight": dic['shortcut'][0] / dic['shortcut'][1],

@@ -11,8 +11,9 @@ def get_similarity_score(grad1, grad2, named_parameters):
     
     total_sim = 0
     
+    # [sim_score for weight, number of layer in this type, sim_score for bias, number of layer in this type]
     dic = {
-        "conv": (0, 0, 0, 0), "bn": (0, 0, 0, 0), "shortcut": (0, 0, 0, 0), "linear": (0, 0, 0, 0)
+        "conv": [0, 0], "bn": [0, 0, 0, 0], "shortcut": [0, 0, 0, 0], "linear": [0, 0, 0, 0]
     }
     
     for tensor1, tensor2, name in zip(grad1, grad2, named_parameters):
@@ -30,7 +31,6 @@ def get_similarity_score(grad1, grad2, named_parameters):
 
     similar_scores = {
         "conv_weight": dic['conv'][0] / dic['conv'][1],
-        "conv_bias": dic['conv'][2] / dic['conv'][3],
         "bn_weight": dic['bn'][0] / dic['bn'][1],
         "bn_bias": dic['bn'][2] / dic['bn'][3],
         "shortcut_weight": dic['shortcut'][0] / dic['shortcut'][1],
