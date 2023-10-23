@@ -4,14 +4,12 @@ import copy
 import torch.nn.functional as F
 
 
-def get_avg_sharpness(model, scaler, batches, noisy_examples, sigma, n_repeat=5, test='train'):
+def get_avg_sharpness(model, scaler, batches, noisy_examples, sigma, n_repeat=5):
     # TODO: implement "filter normalization" inside the perturb_weights() function
     loss_diff = 0
     for i in range(n_repeat):
         # rob_err: get loss of current weights
         _, loss_before, _ = rob_err(batches, model, 0, 0, scaler, 0, 1, noisy_examples=noisy_examples, n_batches=1)
-        if test == 'val':
-            breakpoint()
         # perturb_weights: add random weight into current weights. Gaussian
         weights_delta_dict = perturb_weights(model, add_weight_perturb_scale=sigma, mul_weight_perturb_scale=0, weight_perturb_distr='gauss')
         

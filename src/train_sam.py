@@ -183,7 +183,7 @@ def val(epoch):
                          % (val_loss_mean, acc, correct, total))
             
     prop_of_neg = get_prop_of_neg(net, named_parameters)
-    sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1, test='val')
+    sharpness = get_avg_sharpness(net, scaler, val_dataloader, noisy_examples='default', sigma=0.1)
 
     sparsity = {
         f"val_block{i}": get_feature_sparsity(train_dataloader, net, i)
