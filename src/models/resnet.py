@@ -31,9 +31,9 @@ class BasicBlock(nn.Module):
                 nn.BatchNorm2d(self.expansion*planes)
             )
         if activation == 'relu':
-            self.activate = F.relu()
+            self.activate = F.relu
         elif activation == 'leaky_relu':
-            self.activate = F.leaky_relu()
+            self.activate = F.leaky_relu
 
     def forward(self, x):
         out = self.activate(self.bn1(self.conv1(x)))
@@ -65,9 +65,9 @@ class Bottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion*planes)
             )
         if activation == 'relu':
-            self.activate = F.relu()
+            self.activate = F.relu
         elif activation == 'leaky_relu':
-            self.activate = F.leaky_relu()
+            self.activate = F.leaky_relu
             
 
     def forward(self, x):
@@ -94,9 +94,9 @@ class ResNet(nn.Module):
         self.linear = nn.Linear(512*block.expansion, num_classes)
         
         if activation == 'relu':
-            self.activate = F.relu()
+            self.activate = F.relu
         elif activation == 'leaky_relu':
-            self.activate = F.leaky_relu()
+            self.activate = F.leaky_relu
 
     def _make_layer(self, block, planes, num_blocks, stride, activation):
         strides = [stride] + [1]*(num_blocks-1)
