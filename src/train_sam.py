@@ -14,7 +14,8 @@ from src.models import *
 from src.utils.utils import progress_bar, get_mask_layers, get_prop_of_neg
 from src.data.get_dataloader import get_dataloader
 from src.utils.loss_landscape import get_loss_landscape
-from src.optimizer.sam import SAM 
+# from src.optimizer.sam import SAM 
+from src.optimizer.customized_sam import SAM 
 from src.utils.bypass_bn import enable_running_stats, disable_running_stats
 from src.utils.get_similarity_score import get_similarity_score, get_named_parameters
 from src.utils.get_sharpness import get_avg_sharpness
@@ -126,7 +127,7 @@ def train(epoch):
         
         # get second gradient   
         second_grad = optimizer._get_grad()
-        optimizer.zero_grad
+        optimizer.zero_grad()
         
         sim_score, sim_scores = get_similarity_score(first_grad, second_grad, named_parameters)
 
