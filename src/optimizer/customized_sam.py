@@ -34,7 +34,7 @@ class SAM(torch.optim.Optimizer):
         for group, old_group in zip(self.param_groups, self.old_param_groups):
             for p, old_p in zip(group["params"], old_group["params"]):
                 if p.grad is None: continue
-                p.grad = gamma * p.grad - (1 - gamma) * old_p.grad
+                p.grad = gamma * p.grad + (1 - gamma) * old_p.grad
                 p.data = self.state[p]["old_p"]  # get back to "w" from "w + e(w)"
 
         self.base_optimizer.step()  # do the actual "sharpness-aware" update
